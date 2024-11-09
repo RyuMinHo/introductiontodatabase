@@ -72,8 +72,8 @@ public class AddEmployee extends JFrame {
 
     private void saveEmployeeData() {
         try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD)) {
-            String query = "INSERT INTO EMPLOYEE (Fname, Minit, Lname, Ssn, Bdate, Address, Sex, Salary, Super_ssn, Dno) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?))";
+            String query = "INSERT INTO EMPLOYEE (Fname, Minit, Lname, Ssn, Bdate, Address, Sex, Salary, Super_ssn, Dno, modified) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?), CURRENT_TIMESTAMP)";
             try (PreparedStatement pstmt = connection.prepareStatement(query)) {
                 pstmt.setString(1, fnameField.getText());
                 pstmt.setString(2, minitField.getText());
