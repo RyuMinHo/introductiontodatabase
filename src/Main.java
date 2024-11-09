@@ -16,14 +16,14 @@ public class Main extends JFrame {
     private JPanel panel1;
     private JTable EmployeeTable;
     private JCheckBox fnameCheckBox, minitCheckBox, lnameCheckBox, ssnCheckBox, bdateCheckBox, addressCheckBox,
-            sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox;
+            sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
     private JTextField salaryTextField;
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
     public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "BradleyRyu";
+    public static final String DB_PASSWORD = "";
 
     public Main() {
         setTitle("105조 직원 관리 시스템");
@@ -72,6 +72,7 @@ public class Main extends JFrame {
         deleteEmployeeButton = new JButton("직원 삭제");
         groupAvgSalaryComboBox = new JComboBox<>(new String[]{"그룹 없음", "성별", "상급자", "부서"});
         calculateAvgSalaryButton = new JButton("평균 월급 계산");
+        modifiedCheckBox = new JCheckBox("Modified Date", true);
 
         ItemListener itemListener = e -> {
             try {
@@ -279,6 +280,7 @@ public class Main extends JFrame {
         checkBoxPanel.add(salaryCheckBox);
         checkBoxPanel.add(supervisorCheckBox);
         checkBoxPanel.add(departmentCheckBox);
+        checkBoxPanel.add(modifiedCheckBox);
 
         add(panel1);
 
@@ -396,6 +398,8 @@ public class Main extends JFrame {
             columnModel.getColumn(9).setMaxWidth(supervisorCheckBox.isSelected() ? Integer.MAX_VALUE : 0);
             columnModel.getColumn(10).setMinWidth(departmentCheckBox.isSelected() ? 15 : 0);
             columnModel.getColumn(10).setMaxWidth(departmentCheckBox.isSelected() ? Integer.MAX_VALUE : 0);
+            columnModel.getColumn(11).setMinWidth(modifiedCheckBox.isSelected() ? 15 : 0);
+            columnModel.getColumn(11).setMaxWidth(modifiedCheckBox.isSelected() ? Integer.MAX_VALUE : 0);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -441,6 +445,7 @@ public class Main extends JFrame {
         selectedColumns.add("E.Salary"); // Always include Salary column
         selectedColumns.add("E.Super_ssn"); // Always include Super_ssn column
         selectedColumns.add("D.Dname"); // Always include Dname column
+        selectedColumns.add("E.modified");
 
         String columns = String.join(", ", selectedColumns);
         String query = "SELECT " + columns + " FROM EMPLOYEE E JOIN DEPARTMENT D ON E.Dno = D.Dnumber";
