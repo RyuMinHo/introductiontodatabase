@@ -19,11 +19,11 @@ public class Main extends JFrame {
             sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
     private JTextField salaryTextField;
-    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton;
+    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showERDButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
     public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "";
+    public static final String DB_PASSWORD = "xhakxh124578";
 
     public Main() {
         setTitle("105조 직원 관리 시스템");
@@ -70,6 +70,7 @@ public class Main extends JFrame {
         addEmployeeButton = new JButton("직원 추가");
         editEmployeeButton = new JButton("직원 수정");
         deleteEmployeeButton = new JButton("직원 삭제");
+        showERDButton = new JButton("ERD");
         groupAvgSalaryComboBox = new JComboBox<>(new String[]{"그룹 없음", "성별", "상급자", "부서"});
         calculateAvgSalaryButton = new JButton("평균 월급 계산");
         modifiedCheckBox = new JCheckBox("Modified Date", true);
@@ -121,6 +122,8 @@ public class Main extends JFrame {
         });
 
         calculateAvgSalaryButton.addActionListener(e -> calculateAndDisplayAvgSalary());
+
+        showERDButton.addActionListener(e -> showERD());
     }
 
     private String buildAvgSalaryQuery(String selectedGroup) {
@@ -243,6 +246,7 @@ public class Main extends JFrame {
         buttonPanel.add(addEmployeeButton);
         buttonPanel.add(editEmployeeButton);
         buttonPanel.add(deleteEmployeeButton);
+        buttonPanel.add(showERDButton);
 
         searchPanel.add(SearchRangeComboBox);
         searchPanel.add(genderComboBox);
@@ -317,6 +321,7 @@ public class Main extends JFrame {
 
         deleteEmployeeButton.addActionListener(e -> deleteEmployee());
     }
+
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
@@ -406,7 +411,11 @@ public class Main extends JFrame {
         }
     }
 
-
+    private void showERD() {
+        ERDViewer erdViewer = new ERDViewer();
+        erdViewer.setVisible(true);
+    }
+    
     private void displayDepartmentComboBox() {
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement();
@@ -534,5 +543,3 @@ public class Main extends JFrame {
         SwingUtilities.invokeLater(Main::new);
     }
 }
-
-
