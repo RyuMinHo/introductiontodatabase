@@ -4,6 +4,8 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +18,11 @@ public class Main extends JFrame {
             sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
     private JTextField salaryTextField;
-    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton;
+    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
     public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "BradleyRyu";
+    public static final String DB_PASSWORD = "rootroot";
 
     private DepartmentInfoView departmentInfoView;
 
@@ -74,6 +76,7 @@ public class Main extends JFrame {
         groupAvgSalaryComboBox = new JComboBox<>(new String[]{"그룹 없음", "성별", "상급자", "부서"});
         calculateAvgSalaryButton = new JButton("평균 월급 계산");
         showDepartmentButton = new JButton("부서 정보 보기");
+        downloadCSVButton = new JButton("CSV 파일로 다운로드");
 
         ItemListener itemListener = e -> {
             try {
@@ -258,6 +261,7 @@ public class Main extends JFrame {
         buttonPanel.add(deleteEmployeeButton);
         buttonPanel.add(showERDButton);
         buttonPanel.add(showDepartmentButton);
+        buttonPanel.add(downloadCSVButton);
 
         searchPanel.add(SearchRangeComboBox);
         searchPanel.add(genderComboBox);
@@ -320,6 +324,8 @@ public class Main extends JFrame {
                 JOptionPane.showMessageDialog(Main.this, "검색 중 오류가 발생했습니다.\n 내용: " + ex.getMessage());
             }
         });
+
+        downloadCSVButton.addActionListener(e -> exportToCSVFromTable(EmployeeTable));
 
         addEmployeeButton.addActionListener(e -> {
             AddEmployee addEmployeeFrame = new AddEmployee(Main.this);
@@ -598,6 +604,37 @@ public class Main extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "직원 삭제 중 오류가 발생했습니다.\n내용: " + ex.getMessage());
+        }
+    }
+
+    private void exportToCSVFromTable(JTable table) {
+        String filePath = System.getProperty("user.home") + "/검색결과.csv";
+        try (FileWriter csvWriter = new FileWriter(filePath)) {
+            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            int columnCount = model.getColumnCount();
+
+            for (int i = 0; i < columnCount; i++) {
+                csvWriter.append(model.getColumnName(i));
+                if (i < columnCount - 1) {
+                    csvWriter.append(",");
+                }
+            }
+            csvWriter.append("\n");
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                for (int j = 0; j < columnCount; j++) {
+                    csvWriter.append(String.valueOf(model.getValueAt(i, j)));
+                    if (j < columnCount - 1) {
+                        csvWriter.append(",");
+                    }
+                }
+                csvWriter.append("\n");
+            }
+
+            System.out.println("검색 결과가 파일로 저장되었습니다: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "CSV 파일 내보내기 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
