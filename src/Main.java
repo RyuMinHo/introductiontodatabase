@@ -4,12 +4,9 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Main extends JFrame {
     /* GUI 컴포넌트 */
@@ -19,11 +16,13 @@ public class Main extends JFrame {
             sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
     private JTextField salaryTextField;
-    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showERDButton;
+    private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
     public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "xhakxh124578";
+    public static final String DB_PASSWORD = "BradleyRyu";
+
+    private DepartmentInfoView departmentInfoView;
 
     public Main() {
         setTitle("105조 직원 관리 시스템");
@@ -65,7 +64,8 @@ public class Main extends JFrame {
         salaryCheckBox = new JCheckBox("Salary", true);
         supervisorCheckBox = new JCheckBox("Super_ssn", true);
         departmentCheckBox = new JCheckBox("Department", true);
-        updateButton = new JButton("새로고침");
+        modifiedCheckBox = new JCheckBox("Modified Date", true);
+        //updateButton = new JButton("새로고침");
         searchButton = new JButton("검색");
         addEmployeeButton = new JButton("직원 추가");
         editEmployeeButton = new JButton("직원 수정");
@@ -73,7 +73,7 @@ public class Main extends JFrame {
         showERDButton = new JButton("ERD");
         groupAvgSalaryComboBox = new JComboBox<>(new String[]{"그룹 없음", "성별", "상급자", "부서"});
         calculateAvgSalaryButton = new JButton("평균 월급 계산");
-        modifiedCheckBox = new JCheckBox("Modified Date", true);
+        showDepartmentButton = new JButton("부서 정보 보기");
 
         ItemListener itemListener = e -> {
             try {
@@ -86,16 +86,17 @@ public class Main extends JFrame {
             }
         };
 
-        fnameCheckBox.addItemListener(itemListener);
-        minitCheckBox.addItemListener(itemListener);
-        lnameCheckBox.addItemListener(itemListener);
-        ssnCheckBox.addItemListener(itemListener);
-        bdateCheckBox.addItemListener(itemListener);
-        addressCheckBox.addItemListener(itemListener);
-        sexCheckBox.addItemListener(itemListener);
-        salaryCheckBox.addItemListener(itemListener);
-        supervisorCheckBox.addItemListener(itemListener);
-        departmentCheckBox.addItemListener(itemListener);
+        fnameCheckBox.addItemListener(e -> refreshTable());
+        minitCheckBox.addItemListener(e -> refreshTable());
+        lnameCheckBox.addItemListener(e -> refreshTable());
+        ssnCheckBox.addItemListener(e -> refreshTable());
+        bdateCheckBox.addItemListener(e -> refreshTable());
+        addressCheckBox.addItemListener(e -> refreshTable());
+        sexCheckBox.addItemListener(e -> refreshTable());
+        salaryCheckBox.addItemListener(e -> refreshTable());
+        supervisorCheckBox.addItemListener(e -> refreshTable());
+        departmentCheckBox.addItemListener(e -> refreshTable());
+        modifiedCheckBox.addItemListener(e -> refreshTable());
 
         SearchRangeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -118,13 +119,22 @@ public class Main extends JFrame {
                 }
                 panel1.revalidate();
                 panel1.repaint();
+                refreshTable();
             }
         });
+
 
         calculateAvgSalaryButton.addActionListener(e -> calculateAndDisplayAvgSalary());
 
         showERDButton.addActionListener(e -> showERD());
+
+        calculateAvgSalaryButton.addActionListener(e ->  {
+            calculateAndDisplayAvgSalary();
+            refreshTable();
+        });
     }
+
+
 
     private String buildAvgSalaryQuery(String selectedGroup) {
         String query = "SELECT ";
@@ -242,11 +252,12 @@ public class Main extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JPanel groupByPanel = new JPanel(new FlowLayout());
 
-        buttonPanel.add(updateButton);
+        //buttonPanel.add(updateButton);
         buttonPanel.add(addEmployeeButton);
         buttonPanel.add(editEmployeeButton);
         buttonPanel.add(deleteEmployeeButton);
         buttonPanel.add(showERDButton);
+        buttonPanel.add(showDepartmentButton);
 
         searchPanel.add(SearchRangeComboBox);
         searchPanel.add(genderComboBox);
@@ -287,7 +298,7 @@ public class Main extends JFrame {
         checkBoxPanel.add(modifiedCheckBox);
 
         add(panel1);
-
+    /*
         updateButton.addActionListener(e -> {
             try {
                 Connection connection = getConnection();
@@ -298,7 +309,7 @@ public class Main extends JFrame {
                 ex.printStackTrace();
             }
         });
-
+    */
         searchButton.addActionListener(e -> {
             try (Connection connection = getConnection()) {
                 String selectedRange = (String) SearchRangeComboBox.getSelectedItem();
@@ -313,13 +324,26 @@ public class Main extends JFrame {
         addEmployeeButton.addActionListener(e -> {
             AddEmployee addEmployeeFrame = new AddEmployee(Main.this);
             addEmployeeFrame.setVisible(true);
+            refreshTable();
         });
 
+        showDepartmentButton.addActionListener(e -> {
+            if (departmentInfoView == null || !departmentInfoView.isVisible()) {
+                departmentInfoView = new DepartmentInfoView(this);
+            } else {
+                departmentInfoView.toFront();
+            }
+        });
 
+        editEmployeeButton.addActionListener(e -> {
+            editEmployee();
+            refreshTable();
+        });
 
-        editEmployeeButton.addActionListener(e -> editEmployee());
-
-        deleteEmployeeButton.addActionListener(e -> deleteEmployee());
+        deleteEmployeeButton.addActionListener(e ->  {
+            deleteEmployee();
+            refreshTable();
+        });
     }
 
     private Connection getConnection() throws SQLException {
@@ -331,9 +355,13 @@ public class Main extends JFrame {
             String selectedRange = (String) SearchRangeComboBox.getSelectedItem();
             String query = buildQuery(selectedRange);
             displayEmployeeTableWithQuery(connection, query);
+            displayDepartmentComboBox();
+            if (departmentInfoView != null && departmentInfoView.isVisible()) {
+                departmentInfoView.refreshTable();
+            }
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(Main.this, "Table을 새로고침 하는 동안 오류가 발생했습니다. \n 내용: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "테이블을 새로고침하는 동안 오류가 발생했습니다.\n 내용: " + ex.getMessage());
         }
     }
 
@@ -372,7 +400,7 @@ public class Main extends JFrame {
             // Add rows from ResultSet to the model
             while (rs.next()) {
                 Object[] row = new Object[columnCount + 1];
-                row[0] = false; // Default value for the checkbox
+                row[0] = Boolean.FALSE; // Default value for the checkbox
                 for (int i = 1; i <= columnCount; i++) {
                     row[i] = rs.getObject(i);
                 }
@@ -439,6 +467,40 @@ public class Main extends JFrame {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void displayDepartmentTable() {
+        String query = "SELECT * FROM DEPARTMENT";
+
+        try (Connection connection = getConnection();
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            DefaultTableModel model = new DefaultTableModel();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // Add column names to the model
+            for (int i = 1; i <= columnCount; i++) {
+                model.addColumn(metaData.getColumnName(i));
+            }
+
+            // Add rows to the model
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+                for (int i = 1; i <= columnCount; i++) {
+                    row[i - 1] = rs.getObject(i);
+                }
+                model.addRow(row);
+            }
+
+            // Set the model to the table
+            EmployeeTable.setModel(model);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "부서 테이블을 불러오는 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
