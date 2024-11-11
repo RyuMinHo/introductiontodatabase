@@ -18,7 +18,7 @@ public class Main extends JFrame {
     private JCheckBox fnameCheckBox, minitCheckBox, lnameCheckBox, ssnCheckBox, bdateCheckBox, addressCheckBox,
             sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
-    private JTextField salaryTextField, nameField, ssnField, birthdateField, superSsnField, modifiedDateField;;
+    private JTextField salaryTextField, nameField, ssnField, birthdateField, superSsnField/*, modifiedDateField;*/;
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
@@ -51,7 +51,7 @@ public class Main extends JFrame {
 
     private void initComponents() {
         panel1 = new JPanel();
-        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "이름", "성별", "부서", "거주 도시", "연봉", "Ssn", "상사 Ssn", "생년월일", "수정 날짜"});
+        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "이름", "성별", "부서", "거주 도시", "연봉", "Ssn", "상사 Ssn", "생년월일"/*, "수정 날짜"*/});
         genderComboBox = new JComboBox<>(new String[]{"M", "F"});
         departmentComboBox = new JComboBox<>();
         cityComboBox = new JComboBox<>();
@@ -83,7 +83,7 @@ public class Main extends JFrame {
         ssnField = new JTextField(20);
         birthdateField = new JTextField(20);
         superSsnField = new JTextField(20);
-        modifiedDateField = new JTextField(20);
+        //modifiedDateField = new JTextField(20);
 
         ItemListener itemListener = e -> {
             try {
@@ -119,7 +119,7 @@ public class Main extends JFrame {
                 ssnField.setVisible(false);
                 birthdateField.setVisible(false);
                 superSsnField.setVisible(false);
-                modifiedDateField.setVisible(false);
+                //modifiedDateField.setVisible(false);
 
                 switch (selected) {
                     case "성별":
@@ -148,9 +148,9 @@ public class Main extends JFrame {
                     case "상사 Ssn":
                         superSsnField.setVisible(true);
                         break;
-                    case "수정 날짜":
-                        modifiedDateField.setVisible(true);
-                        break;
+                    //case "수정 날짜":
+                    //    modifiedDateField.setVisible(true);
+                    //    break;
                 }
                 panel1.revalidate();
                 panel1.repaint();
@@ -289,7 +289,7 @@ public class Main extends JFrame {
         searchPanel.add(ssnField);
         searchPanel.add(birthdateField);
         searchPanel.add(superSsnField);
-        searchPanel.add(modifiedDateField);
+        //searchPanel.add(modifiedDateField);
         searchPanel.add(searchButton);
 
         groupByPanel.add(new JLabel("그룹별 평균 월급: "));
@@ -327,7 +327,7 @@ public class Main extends JFrame {
         ssnField.setVisible(false);
         birthdateField.setVisible(false);
         superSsnField.setVisible(false);
-        modifiedDateField.setVisible(false);
+        //modifiedDateField.setVisible(false);
 
         add(panel1);
     /*
@@ -584,9 +584,9 @@ public class Main extends JFrame {
             case "상사 Ssn":
                 query += " WHERE E.Super_ssn = '" + superSsnField.getText() + "'";
                 break;
-            case "수정 날짜":
+            /* case "수정 날짜":
                 query += " WHERE E.modified >= " + modifiedDateField.getText();
-                break;
+                break;*/
         }
 
         return query;
