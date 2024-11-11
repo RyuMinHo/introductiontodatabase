@@ -614,7 +614,7 @@ public class Main extends JFrame {
             int columnCount = model.getColumnCount();
 
             for (int i = 0; i < columnCount; i++) {
-                csvWriter.append(model.getColumnName(i));
+                csvWriter.append("\"").append(model.getColumnName(i)).append("\"");
                 if (i < columnCount - 1) {
                     csvWriter.append(",");
                 }
@@ -623,7 +623,14 @@ public class Main extends JFrame {
 
             for (int i = 0; i < model.getRowCount(); i++) {
                 for (int j = 0; j < columnCount; j++) {
-                    csvWriter.append(String.valueOf(model.getValueAt(i, j)));
+                    String cellValue = String.valueOf(model.getValueAt(i, j));
+
+                    if (cellValue.contains(",")) {
+                        csvWriter.append("\"").append(cellValue).append("\"");
+                    } else {
+                        csvWriter.append(cellValue);
+                    }
+
                     if (j < columnCount - 1) {
                         csvWriter.append(",");
                     }
