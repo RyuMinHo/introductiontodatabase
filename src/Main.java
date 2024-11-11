@@ -262,7 +262,6 @@ public class Main extends JFrame {
         }
     }
 
-
     private void layoutComponents() {
         panel1.setLayout(new BorderLayout());
         JPanel checkBoxPanel = new JPanel(new GridLayout(1, 10));
