@@ -17,12 +17,12 @@ public class Main extends JFrame {
     private JCheckBox fnameCheckBox, minitCheckBox, lnameCheckBox, ssnCheckBox, bdateCheckBox, addressCheckBox,
             sexCheckBox, salaryCheckBox, supervisorCheckBox, departmentCheckBox, modifiedCheckBox;
     private JComboBox<String> SearchRangeComboBox, genderComboBox, departmentComboBox, cityComboBox, groupAvgSalaryComboBox;
-    private JTextField salaryTextField;
+    private JTextField salaryTextField, nameField, ssnField, birthdateField, superSsnField, modifiedDateField;;
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
     public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "rootroot";
+    public static final String DB_PASSWORD = "BradleyRyu";
 
     private DepartmentInfoView departmentInfoView;
 
@@ -50,7 +50,7 @@ public class Main extends JFrame {
 
     private void initComponents() {
         panel1 = new JPanel();
-        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "성별", "부서", "거주 도시", "연봉"});
+        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "이름", "성별", "부서", "거주 도시", "연봉", "Ssn", "상사 Ssn", "생년월일", "수정 날짜"});
         genderComboBox = new JComboBox<>(new String[]{"M", "F"});
         departmentComboBox = new JComboBox<>();
         cityComboBox = new JComboBox<>();
@@ -77,6 +77,12 @@ public class Main extends JFrame {
         calculateAvgSalaryButton = new JButton("평균 월급 계산");
         showDepartmentButton = new JButton("부서 정보 보기");
         downloadCSVButton = new JButton("CSV 파일로 다운로드");
+
+        nameField = new JTextField(20);
+        ssnField = new JTextField(20);
+        birthdateField = new JTextField(20);
+        superSsnField = new JTextField(20);
+        modifiedDateField = new JTextField(20);
 
         ItemListener itemListener = e -> {
             try {
@@ -108,17 +114,42 @@ public class Main extends JFrame {
                 departmentComboBox.setVisible(false);
                 salaryTextField.setVisible(false);
                 cityComboBox.setVisible(false);
+                nameField.setVisible(false);
+                ssnField.setVisible(false);
+                birthdateField.setVisible(false);
+                superSsnField.setVisible(false);
+                modifiedDateField.setVisible(false);
 
-                if ("성별".equals(selected)) {
-                    genderComboBox.setVisible(true);
-                } else if ("부서".equals(selected)) {
-                    departmentComboBox.setVisible(true);
-                    displayDepartmentComboBox();
-                } else if ("연봉".equals(selected)) {
-                    salaryTextField.setVisible(true);
-                } else if ("거주 도시".equals(selected)) {
-                    cityComboBox.setVisible(true);
-                    displayCityComboBox();
+                switch (selected) {
+                    case "성별":
+                        genderComboBox.setVisible(true);
+                        break;
+                    case "부서":
+                        departmentComboBox.setVisible(true);
+                        displayDepartmentComboBox();
+                        break;
+                    case "연봉":
+                        salaryTextField.setVisible(true);
+                        break;
+                    case "거주 도시":
+                        cityComboBox.setVisible(true);
+                        displayCityComboBox();
+                        break;
+                    case "이름":
+                        nameField.setVisible(true);
+                        break;
+                    case "Ssn":
+                        ssnField.setVisible(true);
+                        break;
+                    case "생년월일":
+                        birthdateField.setVisible(true);
+                        break;
+                    case "상사 Ssn":
+                        superSsnField.setVisible(true);
+                        break;
+                    case "수정 날짜":
+                        modifiedDateField.setVisible(true);
+                        break;
                 }
                 panel1.revalidate();
                 panel1.repaint();
@@ -127,7 +158,7 @@ public class Main extends JFrame {
         });
 
 
-        calculateAvgSalaryButton.addActionListener(e -> calculateAndDisplayAvgSalary());
+        //calculateAvgSalaryButton.addActionListener(e -> calculateAndDisplayAvgSalary());
 
         showERDButton.addActionListener(e -> showERD());
 
@@ -177,63 +208,49 @@ public class Main extends JFrame {
             StringBuilder result = new StringBuilder(selectedGroup + "에 따른 평균 월급:\n");
 
             if ("상급자".equals(selectedGroup)) {
-                double totalSupervisorSalary = 0;
-                int supervisorCount = 0;
-
                 while (rs.next()) {
                     String supervisorSsn = rs.getString(1);
                     double avgSalary = rs.getDouble(2);
 
-                    // Query to get supervisor's name and salary
+                    // 상급자 정보 조회
                     String supervisorQuery = "SELECT Fname, Lname, Salary FROM EMPLOYEE WHERE Ssn = ?";
-                    String supervisorName;
-                    double supervisorSalary;
                     try (PreparedStatement supervisorStmt = connection.prepareStatement(supervisorQuery)) {
                         supervisorStmt.setString(1, supervisorSsn);
                         try (ResultSet supervisorRs = supervisorStmt.executeQuery()) {
                             if (supervisorRs.next()) {
-                                supervisorName = supervisorRs.getString("Fname") + " " + supervisorRs.getString("Lname");
-                                supervisorSalary = supervisorRs.getDouble("Salary");
-                            } else {
-                                supervisorName = "Unknown";
-                                supervisorSalary = 0;
+                                String supervisorName = supervisorRs.getString("Fname") + " " + supervisorRs.getString("Lname");
+                                double supervisorSalary = supervisorRs.getDouble("Salary");
+                                result.append("상급자: ").append(supervisorName)
+                                        .append(", 월급: ").append(String.format("%.2f", supervisorSalary)).append("\n");
                             }
                         }
                     }
 
-                    result.append("상급자: ").append(supervisorName).append(", 월급: ").append(supervisorSalary).append("\n");
-
-                    // Query to get subordinates' names
-                    String subQuery = "SELECT E.Fname, E.Lname FROM EMPLOYEE E WHERE E.Super_ssn = ?";
-                    try (PreparedStatement subStmt = connection.prepareStatement(subQuery)) {
+                    // 부하직원 정보 및 평균 월급 조회
+                    String subordinatesQuery = "SELECT AVG(Salary) as AvgSalary FROM EMPLOYEE WHERE Super_ssn = ?";
+                    try (PreparedStatement subStmt = connection.prepareStatement(subordinatesQuery)) {
                         subStmt.setString(1, supervisorSsn);
                         try (ResultSet subRs = subStmt.executeQuery()) {
-                            int subordinateCount = 1;
-                            while (subRs.next()) {
-                                result.append("부하직원").append(subordinateCount++).append(": ")
-                                        .append(subRs.getString("Fname")).append(" ")
-                                        .append(subRs.getString("Lname")).append("\n");
+                            if (subRs.next()) {
+                                double subordinatesAvgSalary = subRs.getDouble("AvgSalary");
+                                result.append("부하직원 평균 월급: ").append(String.format("%.2f", subordinatesAvgSalary)).append("\n");
                             }
                         }
                     }
 
-                    result.append("\n");
-                    totalSupervisorSalary += avgSalary;
-                    supervisorCount++;
-                }
-
-                if (supervisorCount > 0) {
-                    double overallAvgSalary = totalSupervisorSalary / supervisorCount;
-                    result.append("상급자들의 평균 연봉: ").append(overallAvgSalary).append("\n");
+                    result.append("전체 평균 월급: ").append(String.format("%.2f", avgSalary)).append("\n\n");
                 }
             } else {
+                // 기존 코드 유지
                 while (rs.next()) {
                     if ("성별".equals(selectedGroup)) {
-                        result.append("성별: ").append(rs.getString(1)).append(", 평균 월급: ").append(rs.getDouble(2)).append("\n");
+                        result.append("성별: ").append(rs.getString(1))
+                                .append(", 평균 월급: ").append(String.format("%.2f", rs.getDouble(2))).append("\n");
                     } else if ("부서".equals(selectedGroup)) {
-                        result.append("부서: ").append(rs.getString(1)).append(", 평균 월급: ").append(rs.getDouble(2)).append("\n");
+                        result.append("부서: ").append(rs.getString(1))
+                                .append(", 평균 월급: ").append(String.format("%.2f", rs.getDouble(2))).append("\n");
                     } else {
-                        result.append("전체 평균 월급: ").append(rs.getDouble(2)).append("\n");
+                        result.append("전체 평균 월급: ").append(String.format("%.2f", rs.getDouble(2))).append("\n");
                     }
                 }
             }
@@ -268,6 +285,11 @@ public class Main extends JFrame {
         searchPanel.add(departmentComboBox);
         searchPanel.add(salaryTextField);
         searchPanel.add(cityComboBox);
+        searchPanel.add(nameField);
+        searchPanel.add(ssnField);
+        searchPanel.add(birthdateField);
+        searchPanel.add(superSsnField);
+        searchPanel.add(modifiedDateField);
         searchPanel.add(searchButton);
 
         groupByPanel.add(new JLabel("그룹별 평균 월급: "));
@@ -300,6 +322,12 @@ public class Main extends JFrame {
         checkBoxPanel.add(supervisorCheckBox);
         checkBoxPanel.add(departmentCheckBox);
         checkBoxPanel.add(modifiedCheckBox);
+
+        nameField.setVisible(false);
+        ssnField.setVisible(false);
+        birthdateField.setVisible(false);
+        superSsnField.setVisible(false);
+        modifiedDateField.setVisible(false);
 
         add(panel1);
     /*
@@ -449,7 +477,7 @@ public class Main extends JFrame {
         ERDViewer erdViewer = new ERDViewer();
         erdViewer.setVisible(true);
     }
-    
+
     private void displayDepartmentComboBox() {
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement();
@@ -527,18 +555,38 @@ public class Main extends JFrame {
         String columns = String.join(", ", selectedColumns);
         String query = "SELECT " + columns + " FROM EMPLOYEE E JOIN DEPARTMENT D ON E.Dno = D.Dnumber";
 
-        if ("성별".equals(selectedRange)) {
-            query += " WHERE E.Sex = '" + genderComboBox.getSelectedItem() + "'";
-        } else if ("부서".equals(selectedRange)) {
-            query += " WHERE D.Dname = '" + departmentComboBox.getSelectedItem() + "'";
-        } else if ("연봉".equals(selectedRange)) {
-            query += " WHERE E.Salary > " + salaryTextField.getText();
-        } else if ("거주 도시".equals(selectedRange)) {
-            String selectedCity = (String) cityComboBox.getSelectedItem();
-            if (selectedCity != null) {
-                String[] parts = selectedCity.split(", ");
-                query += " WHERE E.Address LIKE '%" + parts[0] + "%' AND E.Address LIKE '%" + parts[1] + "%'";
-            }
+        switch (selectedRange) {
+            case "성별":
+                query += " WHERE E.Sex = '" + genderComboBox.getSelectedItem() + "'";
+                break;
+            case "부서":
+                query += " WHERE D.Dname = '" + departmentComboBox.getSelectedItem() + "'";
+                break;
+            case "연봉":
+                query += " WHERE E.Salary > " + salaryTextField.getText();
+                break;
+            case "거주 도시":
+                String selectedCity = (String) cityComboBox.getSelectedItem();
+                if (selectedCity != null) {
+                    String[] parts = selectedCity.split(", ");
+                    query += " WHERE E.Address LIKE '%" + parts[0] + "%' AND E.Address LIKE '%" + parts[1] + "%'";
+                }
+                break;
+            case "이름":
+                query += " WHERE CONCAT(E.Fname, ' ', E.Minit, ' ', E.Lname) LIKE '%" + nameField.getText() + "%'";
+                break;
+            case "Ssn":
+                query += " WHERE E.Ssn = '" + ssnField.getText() + "'";
+                break;
+            case "생년월일":
+                query += " WHERE E.Bdate = '" + birthdateField.getText() + "'";
+                break;
+            case "상사 Ssn":
+                query += " WHERE E.Super_ssn = '" + superSsnField.getText() + "'";
+                break;
+            case "수정 날짜":
+                query += " WHERE E.modified >= " + modifiedDateField.getText();
+                break;
         }
 
         return query;
