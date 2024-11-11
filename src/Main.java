@@ -209,9 +209,11 @@ public class Main extends JFrame {
             StringBuilder result = new StringBuilder(selectedGroup + "에 따른 평균 월급:\n");
 
             if ("상급자".equals(selectedGroup)) {
+                double sumSupervisorSalary = 0.0;
+                int supervisorCount = 0;
+
                 while (rs.next()) {
                     String supervisorSsn = rs.getString(1);
-                    double avgSalary = rs.getDouble(2);
 
                     // 상급자 정보 조회
                     String supervisorQuery = "SELECT Fname, Lname, Salary FROM EMPLOYEE WHERE Ssn = ?";
@@ -221,6 +223,9 @@ public class Main extends JFrame {
                             if (supervisorRs.next()) {
                                 String supervisorName = supervisorRs.getString("Fname") + " " + supervisorRs.getString("Lname");
                                 double supervisorSalary = supervisorRs.getDouble("Salary");
+                                sumSupervisorSalary += supervisorSalary;
+                                supervisorCount++;
+
                                 result.append("상급자: ").append(supervisorName)
                                         .append(", 월급: ").append(String.format("%.2f", supervisorSalary)).append("\n");
                             }
@@ -228,18 +233,36 @@ public class Main extends JFrame {
                     }
 
                     // 부하직원 정보 및 평균 월급 조회
-                    String subordinatesQuery = "SELECT AVG(Salary) as AvgSalary FROM EMPLOYEE WHERE Super_ssn = ?";
+                    String subordinatesQuery = "SELECT Fname, Lname, Salary FROM EMPLOYEE WHERE Super_ssn = ?";
+                    double sumSubordinateSalary = 0.0;
+                    int subordinateCount = 0;
+
                     try (PreparedStatement subStmt = connection.prepareStatement(subordinatesQuery)) {
                         subStmt.setString(1, supervisorSsn);
                         try (ResultSet subRs = subStmt.executeQuery()) {
-                            if (subRs.next()) {
-                                double subordinatesAvgSalary = subRs.getDouble("AvgSalary");
-                                result.append("부하직원 평균 월급: ").append(String.format("%.2f", subordinatesAvgSalary)).append("\n");
+                            result.append("부하직원:\n");
+                            while (subRs.next()) {
+                                String subordinateName = subRs.getString("Fname") + " " + subRs.getString("Lname");
+                                double subordinateSalary = subRs.getDouble("Salary");
+                                sumSubordinateSalary += subordinateSalary;
+                                subordinateCount++;
+
+                                result.append("  - 이름: ").append(subordinateName)
+                                        .append(", 월급: ").append(String.format("%.2f", subordinateSalary)).append("\n");
+                            }
+                            if (subordinateCount > 0) {
+                                double avgSubordinateSalary = sumSubordinateSalary / subordinateCount;
+                                result.append("부하직원 평균 월급: ").append(String.format("%.2f", avgSubordinateSalary)).append("\n");
                             }
                         }
                     }
 
-                    result.append("전체 평균 월급: ").append(String.format("%.2f", avgSalary)).append("\n\n");
+                    result.append("\n");
+                }
+
+                if (supervisorCount > 0) {
+                    double avgSupervisorSalary = sumSupervisorSalary / supervisorCount;
+                    result.append("상급자들의 평균 월급: ").append(String.format("%.2f", avgSupervisorSalary)).append("\n");
                 }
             } else {
                 // 기존 코드 유지
