@@ -1,13 +1,16 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -580,40 +583,82 @@ public class Main extends JFrame {
 
         switch (selectedRange) {
             case "성별":
-                query += " WHERE E.Sex = '" + genderComboBox.getSelectedItem() + "'";
-                break;
-            case "부서":
-                query += " WHERE D.Dname = '" + departmentComboBox.getSelectedItem() + "'";
-                break;
-            case "월급":
-                query += " WHERE E.Salary >= " + salaryTextField.getText();
-                break;
-            case "거주 도시":
-                String selectedCity = (String) cityComboBox.getSelectedItem();
-                if (selectedCity != null) {
-                    String[] parts = selectedCity.split(", ");
-                    query += " WHERE E.Address LIKE '%" + parts[0] + "%' AND E.Address LIKE '%" + parts[1] + "%'";
+                String gender = (String) genderComboBox.getSelectedItem();
+                if (gender != null && !gender.isEmpty()) {
+                    query += " WHERE E.Sex = '" + gender + "'";
                 }
                 break;
+
+            case "부서":
+                String department = (String) departmentComboBox.getSelectedItem();
+                if (department != null && !department.isEmpty()) {
+                    query += " WHERE D.Dname = '" + department + "'";
+                }
+                break;
+
+            case "월급":
+                String salary = salaryTextField.getText().trim();
+                if (!salary.isEmpty()) {
+                    try {
+                        Double.parseDouble(salary);
+                        query += " WHERE E.Salary >= " + salary;
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("월급 필드는 숫자여야 합니다.");
+                    }
+                }
+                break;
+
+            case "거주 도시":
+                String selectedCity = (String) cityComboBox.getSelectedItem();
+                if (selectedCity != null && !selectedCity.isEmpty()) {
+                    String[] parts = selectedCity.split(", ");
+                    if (parts.length == 2) {
+                        query += " WHERE E.Address LIKE '%" + parts[0] + "%' AND E.Address LIKE '%" + parts[1] + "%'";
+                    }
+                }
+                break;
+
             case "이름":
-                query += " WHERE CONCAT(E.Fname, ' ', E.Minit, ' ', E.Lname) LIKE '%" + nameField.getText() + "%'";
+                String name = nameField.getText().trim();
+                if (!name.isEmpty()) {
+                    query += " WHERE CONCAT(E.Fname, ' ', E.Minit, ' ', E.Lname) LIKE '%" + name + "%'";
+                }
                 break;
+
             case "Ssn":
-                query += " WHERE E.Ssn = '" + ssnField.getText() + "'";
+                String ssn = ssnField.getText().trim();
+                if (!ssn.isEmpty()) {
+                    query += " WHERE E.Ssn = '" + ssn + "'";
+                }
                 break;
+
             case "생년월일":
-                query += " WHERE E.Bdate = '" + birthdateField.getText() + "'";
+                String birthdate = birthdateField.getText().trim();
+                if (!birthdate.isEmpty()) {
+                    query += " WHERE E.Bdate = '" + birthdate + "'";
+                }
                 break;
+
             case "상사 Ssn":
-                query += " WHERE E.Super_ssn = '" + superSsnField.getText() + "'";
+                String superSsn = superSsnField.getText().trim();
+                if (!superSsn.isEmpty()) {
+                    query += " WHERE E.Super_ssn = '" + superSsn + "'";
+                }
                 break;
-            /* case "수정 날짜":
-                query += " WHERE E.modified >= " + modifiedDateField.getText();
-                break;*/
+
+        /*
+        case "수정 날짜":
+            String modifiedDate = modifiedDateField.getText().trim();
+            if (!modifiedDate.isEmpty()) {
+                query += " WHERE E.modified >= '" + modifiedDate + "'";
+            }
+            break;
+        */
         }
 
         return query;
     }
+
 
     private void editEmployee() {
         DefaultTableModel model = (DefaultTableModel) EmployeeTable.getModel();
@@ -679,7 +724,9 @@ public class Main extends JFrame {
     }
 
     private void exportToCSVFromTable(JTable table) {
-        String filePath = System.getProperty("user.home") + "/검색결과.csv";
+        String timestamp = new SimpleDateFormat("yyMMdd_HHmmss").format(new Date());
+        String filePath = System.getProperty("user.home") + "/검색결과_" + timestamp + ".csv";
+
         try (FileWriter csvWriter = new FileWriter(filePath)) {
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             int columnCount = model.getColumnCount();
