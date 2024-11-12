@@ -93,6 +93,76 @@ public class EditEmployee extends JFrame {
     }
 
     private void saveEmployeeData() {
+        // SSN 검증 (EditEmployee.java)
+        String ssn = ssnField.getText();
+        if (!ssn.matches("\\d{9}")) {
+            JOptionPane.showMessageDialog(this, "SSN은 9자리 숫자여야 합니다.");
+            return;
+        }
+        if (!ssn.equals(originalSsn)) {
+            try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD);
+                 PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM EMPLOYEE WHERE Ssn = ?")) {
+                pstmt.setString(1, ssn);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this, "이미 DB에 존재하는 SSN입니다.");
+                    return;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "SSN 확인 중 오류가 발생했습니다: " + e.getMessage());
+                return;
+            }
+        }
+
+        // 성별 검증
+        String gender = sexField.getText().toUpperCase();
+        if (!gender.equals("M") && !gender.equals("F")) {
+            JOptionPane.showMessageDialog(this, "성별은 M 또는 F만 가능합니다.");
+            return;
+        }
+
+        // Salary 검증
+        String salaryStr = salaryField.getText();
+        try {
+            Double.parseDouble(salaryStr);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "급여는 숫자여야 합니다.");
+            return;
+        }
+
+        // Supervisor SSN 검증
+        String superSsn = superSsnField.getText();
+        if (!superSsn.isEmpty()) {
+            try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD);
+                 PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM EMPLOYEE WHERE Ssn = ?")) {
+                pstmt.setString(1, superSsn);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next() && rs.getInt(1) == 0) {
+                    JOptionPane.showMessageDialog(this, "존재하지 않는 슈퍼바이저 SSN입니다.");
+                    return;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "슈퍼바이저 SSN 확인 중 오류가 발생했습니다: " + e.getMessage());
+                return;
+            }
+        }
+
+        // 주소 형식 검증
+        String address = addressField.getText();
+        if (!address.matches("^[^,]+,\\s*[A-Za-z ]+$")) {
+            JOptionPane.showMessageDialog(this, "주소 형식은 'city, state' 여야 합니다.");
+            return;
+        }
+
+        // 생일 형식 검증
+        String bdate = bdateField.getText();
+        if (!bdate.matches("(\\d{4}-\\d{2}-\\d{2}|\\d{8})")) {
+            JOptionPane.showMessageDialog(this, "생일 형식은 'YYYY-MM-DD' 또는 'YYYYMMDD' 여야 합니다.");
+            return;
+        }
+
         try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD)) {
             String query = "UPDATE EMPLOYEE SET Fname = ?, Minit = ?, Lname = ?, Ssn = ?, Bdate = ?, Address = ?, Sex = ?, Salary = ?, Super_ssn = ?, Dno = (SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?), modified = CURRENT_TIMESTAMP WHERE Ssn = ?";
             try (PreparedStatement pstmt = connection.prepareStatement(query)) {

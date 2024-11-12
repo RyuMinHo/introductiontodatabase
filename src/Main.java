@@ -25,8 +25,8 @@ public class Main extends JFrame {
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
-    public static final String DB_USER = "";
-    public static final String DB_PASSWORD = "";
+    public static final String DB_USER = "root";
+    public static final String DB_PASSWORD = "xhakxh124578";
 
     private DepartmentInfoView departmentInfoView;
 
@@ -517,18 +517,23 @@ public class Main extends JFrame {
         }
     }
 
+
     private void displayCityComboBox() {
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT DISTINCT SUBSTRING_INDEX(Address, ',', -2) AS CityState FROM EMPLOYEE")) {
             cityComboBox.removeAllItems();
             while (rs.next()) {
-                cityComboBox.addItem(rs.getString("CityState").trim());
+                String cityState = rs.getString("CityState").trim();
+                if (cityState.contains(",") && !cityState.equals("1")) {
+                    cityComboBox.addItem(cityState);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private void displayDepartmentTable() {
         String query = "SELECT * FROM DEPARTMENT";
