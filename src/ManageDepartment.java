@@ -190,6 +190,21 @@ public class ManageDepartment extends JFrame {
             return;
         }
 
+        // Mgr_ssn 검증
+        try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM EMPLOYEE WHERE Ssn = ?")) {
+            pstmt.setString(1, mgrSsn);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next() && rs.getInt(1) == 0) {
+                JOptionPane.showMessageDialog(this, "존재하지 않는 Ssn입니다.");
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "관리자 SSN 확인 중 오류가 발생했습니다: " + e.getMessage());
+            return;
+        }
+
         try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD)) {
             connection.setAutoCommit(false);
 
@@ -230,6 +245,21 @@ public class ManageDepartment extends JFrame {
 
         if (dname == null || dname.equals("부서를 선택하세요") || dnumber.isEmpty() || mgrSsn.isEmpty() || mgrStartDate.isEmpty()) {
             JOptionPane.showMessageDialog(this, "모든 필드를 입력해주세요.");
+            return;
+        }
+
+        // Mgr_ssn 검증
+        try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM EMPLOYEE WHERE Ssn = ?")) {
+            pstmt.setString(1, mgrSsn);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next() && rs.getInt(1) == 0) {
+                JOptionPane.showMessageDialog(this, "존재하지 않는 Ssn입니다.");
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "관리자 SSN 확인 중 오류가 발생했습니다: " + e.getMessage());
             return;
         }
 
@@ -278,6 +308,21 @@ public class ManageDepartment extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // 직원 존재 여부 확인
+        try (Connection connection = DriverManager.getConnection(Main.DB_URL, Main.DB_USER, Main.DB_PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM EMPLOYEE WHERE Dno = (SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?)")) {
+            pstmt.setString(1, dname);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                JOptionPane.showMessageDialog(this, "부서에 직원이 있어 삭제할 수 없습니다.");
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "부서 삭제 중 오류가 발생했습니다: " + e.getMessage());
             return;
         }
 

@@ -25,8 +25,8 @@ public class Main extends JFrame {
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
-    public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "xhakxh124578";
+    public static final String DB_USER = "";
+    public static final String DB_PASSWORD = "";
 
     private DepartmentInfoView departmentInfoView;
 
