@@ -22,8 +22,8 @@ public class Main extends JFrame {
     private JButton updateButton, searchButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton, calculateAvgSalaryButton, showDepartmentButton, showERDButton, downloadCSVButton;
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
-    public static final String DB_USER = "root";
-    public static final String DB_PASSWORD = "BradleyRyu";
+    public static final String DB_USER = "";
+    public static final String DB_PASSWORD = "";
 
     private DepartmentInfoView departmentInfoView;
 
@@ -51,7 +51,7 @@ public class Main extends JFrame {
 
     private void initComponents() {
         panel1 = new JPanel();
-        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "이름", "성별", "부서", "거주 도시", "연봉", "Ssn", "상사 Ssn", "생년월일"/*, "수정 날짜"*/});
+        SearchRangeComboBox = new JComboBox<>(new String[]{"전체", "이름", "성별", "부서", "거주 도시", "월급", "Ssn", "상사 Ssn", "생년월일"/*, "수정 날짜"*/});
         genderComboBox = new JComboBox<>(new String[]{"M", "F"});
         departmentComboBox = new JComboBox<>();
         cityComboBox = new JComboBox<>();
@@ -129,7 +129,7 @@ public class Main extends JFrame {
                         departmentComboBox.setVisible(true);
                         displayDepartmentComboBox();
                         break;
-                    case "연봉":
+                    case "월급":
                         salaryTextField.setVisible(true);
                         break;
                     case "거주 도시":
@@ -585,8 +585,8 @@ public class Main extends JFrame {
             case "부서":
                 query += " WHERE D.Dname = '" + departmentComboBox.getSelectedItem() + "'";
                 break;
-            case "연봉":
-                query += " WHERE E.Salary > " + salaryTextField.getText();
+            case "월급":
+                query += " WHERE E.Salary >= " + salaryTextField.getText();
                 break;
             case "거주 도시":
                 String selectedCity = (String) cityComboBox.getSelectedItem();

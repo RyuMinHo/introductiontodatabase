@@ -151,7 +151,7 @@ public class DepartmentInfoView extends JFrame {
             case "관리자 SSN":
                 return baseQuery + "Mgr_ssn LIKE ?";
             case "관리자 시작 날짜":
-                String comparison = yearComparisonComboBox.getSelectedItem().equals("이전") ? "<" : ">";
+                String comparison = yearComparisonComboBox.getSelectedItem().equals("이전") ? "<=" : ">";
                 return baseQuery + "YEAR(Mgr_start_date) " + comparison + " ?";
             default:
                 return "SELECT * FROM DEPARTMENT";
